@@ -1,2 +1,2 @@
 # EBCrypt
-Wiseman cipher viewer
+Displays decrypted answers on Wiseman English Builder.
