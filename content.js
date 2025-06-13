@@ -31,6 +31,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         display.style.zIndex = 9999;
         display.style.maxHeight = "90vh";
         display.style.overflowY = "auto";
+        display.style.color = "green";
+        display.style.fontFamily = "Roboto, Arial, sans-serif";
+        display.style.fontSize = "16px";
         display.innerHTML = "<b>Decrypted Answers:</b><br/>";
 
         answers.forEach((ans, i) => {
