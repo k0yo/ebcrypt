@@ -1,3 +1,2 @@
 # EBCrypt
----
 Wiseman cipher viewer
