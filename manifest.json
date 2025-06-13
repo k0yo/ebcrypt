@@ -1,0 +1,16 @@
+{
+  "name": "EBCrypt",
+  "version": "1.0",
+  "description": "Displays decrypted answers on Wiseman English Builder.",
+  "permissions": ["scripting", "activeTab", "webRequest", "webRequestBlocking"],
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [
+    {
+      "matches": ["*://*.wiseman.com.hk/*"],
+      "js": ["decrypt.js", "content.js"]
+    }
+  ],
+  "action": {
+    "default_title": "Show Answers"
+  }
+}
