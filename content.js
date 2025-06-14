@@ -1,5 +1,6 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === "courseXML") {
+        console.log("Received course_pc.exml:", request.xmlText);
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(request.xmlText, "text/xml");
         const seed = parseInt(xmlDoc.querySelector("course").getAttribute("seed"));
