@@ -13,7 +13,6 @@
     "scripting",
     "activeTab",
     "webRequest",
-    "webRequestBlocking",
     "storage"
   ],
   "host_permissions": ["<all_urls>"],

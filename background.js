@@ -18,24 +18,5 @@ chrome.webRequest.onCompleted.addListener(
     { urls: ["<all_urls>"], types: ["xmlhttprequest", "other"] }
 );
 
-// Intercept 'commit.do' requests and modify 'cmi.core.score.raw' to 100
-chrome.webRequest.onBeforeRequest.addListener(
-    function(details) {
-        if (details.method !== 'POST' || !details.url.includes('commit.do')) return;
-        if (!details.requestBody || !details.requestBody.raw || !details.requestBody.raw[0]) return;
-        try {
-            console.log('Detected commit.do request, modifying cmi.core.score.raw to 100');
-            const decoder = new TextDecoder('utf-8');
-            const bodyString = decoder.decode(details.requestBody.raw[0].bytes);
-            let data = JSON.parse(bodyString);
-            data["cmi.core.score.raw"] = 100;
-            const encoder = new TextEncoder();
-            const newBody = encoder.encode(JSON.stringify(data));
-            return { requestBody: { raw: [{ bytes: newBody }] } };
-        } catch (e) {
-            console.error('Failed to modify commit.do request:', e);
-        }
-    },
-    { urls: ["<all_urls>"] },
-    ["blocking", "requestBody"]
-);
+// Note: Removed webRequest blocking modification because Manifest V3 does not support modifying request bodies.
+// The content script (`content.js`) injects an in-page interceptor that overrides fetch and XHR to modify 'commit.do' request bodies instead.
