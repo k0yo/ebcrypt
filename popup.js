@@ -18,3 +18,13 @@ document.addEventListener('DOMContentLoaded', function() {
     answersDiv.innerHTML = html;
   });
 });
+
+document.getElementById('confirm').addEventListener('click', function() {
+  antiDetection = document.getElementById('anti-detection').value
+  automation = document.getElementById('automation').value
+  chrome.storage.local.set(
+    { antiDetection: antiDetection, automation: automation }, () => {
+      console.log("Settings saved");
+    }
+  );
+});
