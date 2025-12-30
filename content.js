@@ -89,50 +89,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-// Inject a script to override fetch and XMLHttpRequest, intercepting 'commit.do' requests and modifying cmi.core.score.raw to 100.
-(function injectCommitInterceptor() {
-    const script = document.createElement('script');
-    script.textContent = `
-        (function() {
-            // Intercept fetch
-            const origFetch = window.fetch;
-            window.fetch = async function(input, init) {
-                let url = (typeof input === 'string') ? input : input.url;
-                if (url && url.includes('commit.do') && init && init.method === 'POST' && init.body) {
-                    try {
-                        let bodyObj = JSON.parse(init.body);
-                        bodyObj["cmi.core.score.raw"] = 100;
-                        init.body = JSON.stringify(bodyObj);
-                        console.log('[EBCrypt] Modified commit.do fetch request:', init.body);
-                    } catch (e) {
-                        // Not JSON, skip
-                    }
-                }
-                return origFetch.apply(this, arguments);
-            };
-
-            // Intercept XMLHttpRequest
-            const origOpen = XMLHttpRequest.prototype.open;
-            const origSend = XMLHttpRequest.prototype.send;
-            XMLHttpRequest.prototype.open = function(method, url) {
-                this._ebcrypt_isCommit = url && url.includes('commit.do') && method === 'POST';
-                return origOpen.apply(this, arguments);
-            };
-            XMLHttpRequest.prototype.send = function(body) {
-                if (this._ebcrypt_isCommit && body) {
-                    try {
-                        let bodyObj = JSON.parse(body);
-                        bodyObj["cmi.core.score.raw"] = 100;
-                        body = JSON.stringify(bodyObj);
-                        console.log('[EBCrypt] Modified commit.do XHR request:', body);
-                    } catch (e) {
-                        // Not JSON, skip
-                    }
-                }
-                return origSend.call(this, body);
-            };
-        })();
-    `;
-    document.documentElement.appendChild(script);
-    script.remove();
-})();
+// Commit request interception is now handled by a dedicated content script injected at document_start
+// (see `commit_interceptor.js`). This earlier injection ensures the page's own XHR/fetch are intercepted before
+// they are used by the page's scripts.
