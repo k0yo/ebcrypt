@@ -38,24 +38,44 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     groupQuestionNumber++;
                 }
                 // Handle <text correct="..."> elements (fillin)
-                const texts = qNode.querySelectorAll("text[correct]");
-                const textNodes = qNode.querySelectorAll("text[text]");
-                let text = "";
-                for (let i = 0; i < textNodes.length; i++) {
-                    text += textNodes[i].getAttribute("text");
-                }
-                texts.forEach((node) => {
-                    const enc = node.getAttribute("correct");
-                    const dec = decrypt(enc, seed);
-                    answers.push({
-                        group: groupName,
-                        type: qType,
-                        decrypted: dec,
-                        question: text,
-                        index: groupQuestionNumber
+                console.log(qNode.querySelectorAll("set text").length);
+                console.log(qNode.querySelectorAll("set").length);
+                if (qNode.querySelectorAll("set text").length > qNode.querySelectorAll("set").length) { // For normal fill-in-the-blank questions
+                    const texts = qNode.querySelectorAll("text[correct]");
+                    const textNodes = qNode.querySelectorAll("text[text]");
+                    let text = "";
+                    for (let i = 0; i < textNodes.length; i++) {
+                        text += textNodes[i].getAttribute("text");
+                    }
+                    texts.forEach((node) => {
+                        const enc = node.getAttribute("correct");
+                        const dec = decrypt(enc, seed);
+                        answers.push({
+                            group: groupName,
+                            type: qType,
+                            decrypted: dec,
+                            question: text,
+                            index: groupQuestionNumber
+                        });
+                        groupQuestionNumber++;
                     });
-                    groupQuestionNumber++;
-                });
+                } else { // For matching fill-in-the-blank questions
+                    const text = qNode.getAttribute("text");
+                    const texts = qNode.querySelectorAll("text[correct]");
+                    const textNodes = qNode.querySelectorAll("text[text]");
+                    texts.forEach((node) => {
+                        const enc = node.getAttribute("correct");
+                        const dec = decrypt(enc, seed);
+                        answers.push({
+                            group: groupName,
+                            type: qType,
+                            decrypted: dec,
+                            question: text,
+                            index: groupQuestionNumber
+                        });
+                        groupQuestionNumber++;
+                    });
+                }
                 // Handle <answer correct="..."> elements (mmc, etc), may have been discontinued in EB
                 const options = qNode.querySelectorAll("answer[correct]");
                 options.forEach((node, idx) => {
