@@ -56,7 +56,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     });
                     groupQuestionNumber++;
                 });
-                // Handle <answer correct="..."> elements (mmc, etc)
+                // Handle <answer correct="..."> elements (mmc, etc), may have been discontinued in EB
                 const options = qNode.querySelectorAll("answer[correct]");
                 options.forEach((node, idx) => {
                     const enc = node.getAttribute("correct");
