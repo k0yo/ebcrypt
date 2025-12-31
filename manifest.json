@@ -13,9 +13,19 @@
     "scripting",
     "activeTab",
     "webRequest",
-    "webRequestBlocking",
-    "storage"
+    "storage", 
+    "declarativeNetRequest", 
+    "declarativeNetRequestFeedback"
   ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
@@ -23,7 +33,26 @@
   "content_scripts": [
     {
       "matches": ["*://*.wiseman.com.hk/*"],
-      "js": ["decrypt.js", "content.js"]
+      "js": ["score-modifier.js", "main.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["*://*.wiseman.com.hk/*"],
+      "js": ["decrypt.js", "content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://*.wiseman.com.hk/*"],
+      "js": ["content.js"],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["score-modifier.js", "main.js"],
+      "matches": ["*://*.wiseman.com.hk/*"]
     }
   ],
   "action": {

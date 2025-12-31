@@ -18,6 +18,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 // For smc/mmc: <question correct="...">, decrypt and use as index for <answer>
                 if (qNode.hasAttribute("correct") && (qType === "smc" || qType === "mmc")) {
                     const enc = qNode.getAttribute("correct");
+                    const text = qNode.getAttribute("text");
                     const dec = decrypt(enc, seed);
                     const answersList = Array.from(qNode.querySelectorAll("answer"));
                     let idx = parseInt(dec, 10);
@@ -25,24 +26,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     if (!isNaN(idx) && idx >= 1 && idx <= answersList.length) {
                         correctAnswer = answersList[idx - 1]; // 1-based index
                     }
-                    const answerText = correctAnswer ? correctAnswer.getAttribute("text") : dec;
+                    const answerText = correctAnswer ? String.fromCharCode(idx + 64) + ", " + correctAnswer.getAttribute("text") : idx;
                     answers.push({
                         group: groupName,
                         type: qType,
                         decrypted: answerText,
+                        question: text, 
                         index: groupQuestionNumber
                     });
                     groupQuestionNumber++;
                 }
                 // Handle <text correct="..."> elements (fillin)
                 const texts = qNode.querySelectorAll("text[correct]");
-                texts.forEach((node, idx) => {
+                const textNodes = qNode.querySelectorAll("text[text]");
+                let text = "";
+                for (let i = 0; i < textNodes.length; i++) {
+                    text += textNodes[i].getAttribute("text");
+                }
+                texts.forEach((node) => {
                     const enc = node.getAttribute("correct");
                     const dec = decrypt(enc, seed);
                     answers.push({
                         group: groupName,
                         type: qType,
                         decrypted: dec,
+                        question: text,
                         index: groupQuestionNumber
                     });
                     groupQuestionNumber++;
@@ -60,79 +68,48 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     });
                     groupQuestionNumber++;
                 });
+                console.log(answers);
             });
         });
 
         // Save answers to chrome.storage.local for popup
         chrome.storage && chrome.storage.local && chrome.storage.local.set({ ebcryptAnswers: answers });
-        // Inject answers under each question in the DOM based on the HTML structure
-        const questionEls = document.querySelectorAll('question-smc, question-mmc, question-fillin, question-mtf, question-matching');
-        let answerIdx = 0;
-        answers.forEach(ans => {
-            const qEl = questionEls[answerIdx];
-            if (qEl) {
-                const entryContainer = qEl.querySelector('.c_entry-container');
-                const entryText = entryContainer ? entryContainer.querySelector('.c_entry-text') : null;
-                if (entryContainer && entryText && !entryContainer.querySelector('.ebcrypt-answer')) {
-                    const answerDiv = document.createElement('div');
-                    answerDiv.className = 'ebcrypt-answer';
-                    answerDiv.style.color = 'green';
-                    answerDiv.style.fontWeight = 'bold';
-                    answerDiv.style.marginTop = '8px';
-                    answerDiv.textContent = `Answer: ${ans.decrypted}`;
-                    entryContainer.insertBefore(answerDiv, entryText.nextSibling);
-                }
-            }
-            answerIdx++;
-        });
         // No overlay injected into the website
     }
 });
 
-// Inject a script to override fetch and XMLHttpRequest, intercepting 'commit.do' requests and modifying cmi.core.score.raw to 100.
-(function injectCommitInterceptor() {
-    const script = document.createElement('script');
-    script.textContent = `
-        (function() {
-            // Intercept fetch
-            const origFetch = window.fetch;
-            window.fetch = async function(input, init) {
-                let url = (typeof input === 'string') ? input : input.url;
-                if (url && url.includes('commit.do') && init && init.method === 'POST' && init.body) {
-                    try {
-                        let bodyObj = JSON.parse(init.body);
-                        bodyObj["cmi.core.score.raw"] = 100;
-                        init.body = JSON.stringify(bodyObj);
-                        console.log('[EBCrypt] Modified commit.do fetch request:', init.body);
-                    } catch (e) {
-                        // Not JSON, skip
-                    }
-                }
-                return origFetch.apply(this, arguments);
-            };
+function onChange(mutationsList, observer) {
+    console.log('DOM changed');
 
-            // Intercept XMLHttpRequest
-            const origOpen = XMLHttpRequest.prototype.open;
-            const origSend = XMLHttpRequest.prototype.send;
-            XMLHttpRequest.prototype.open = function(method, url) {
-                this._ebcrypt_isCommit = url && url.includes('commit.do') && method === 'POST';
-                return origOpen.apply(this, arguments);
-            };
-            XMLHttpRequest.prototype.send = function(body) {
-                if (this._ebcrypt_isCommit && body) {
-                    try {
-                        let bodyObj = JSON.parse(body);
-                        bodyObj["cmi.core.score.raw"] = 100;
-                        body = JSON.stringify(bodyObj);
-                        console.log('[EBCrypt] Modified commit.do XHR request:', body);
-                    } catch (e) {
-                        // Not JSON, skip
-                    }
-                }
-                return origSend.call(this, body);
-            };
-        })();
-    `;
-    document.documentElement.appendChild(script);
-    script.remove();
-})();
+    if (document.querySelectorAll("input[type='text']").length == 0) {
+        var current = document.querySelectorAll('.c_entry-text.ng-star-inserted')[0].innerHTML; // For non-fill-in-the-blank questions
+    } else {
+        var current = document.querySelectorAll('.c_entry-text.ng-star-inserted')[1].innerHTML.replace(/&nbsp;/g, ' '); // For fill-in-the-blank questions
+    }
+    console.log("Current element:", current);
+
+    chrome.storage.local.get(["ebcryptAnswers"]).then(result => {
+        const answers = result.ebcryptAnswers || [];
+
+        answers.forEach(item => {
+            const questionText = item.question;
+            const answerText = item.decrypted;
+            if (questionText.includes(current)){
+                console.log("Question:", questionText);
+                console.log("Answer:", answerText);
+            }
+        });
+    });
+}
+
+const observer = new MutationObserver(onChange);
+
+observer.observe(document.body, {
+    childList: true,
+    subtree: true
+});
+
+// Interception of 'commit.do' requests is handled by `main.js` (in the MAIN world) which overrides
+// `window.fetch` and `XMLHttpRequest` at document_start. That code is intentionally separated because
+// MAIN-world scripts can access the page's real fetch/XHR, while the ISOLATED world (this script) needs
+// `chrome.runtime` access to display answers and cannot run in MAIN.
