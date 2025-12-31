@@ -18,6 +18,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 // For smc/mmc: <question correct="...">, decrypt and use as index for <answer>
                 if (qNode.hasAttribute("correct") && (qType === "smc" || qType === "mmc")) {
                     const enc = qNode.getAttribute("correct");
+                    const text = qNode.getAttribute("text");
                     const dec = decrypt(enc, seed);
                     const answersList = Array.from(qNode.querySelectorAll("answer"));
                     let idx = parseInt(dec, 10);
@@ -25,24 +26,32 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     if (!isNaN(idx) && idx >= 1 && idx <= answersList.length) {
                         correctAnswer = answersList[idx - 1]; // 1-based index
                     }
-                    const answerText = correctAnswer ? correctAnswer.getAttribute("text") : dec;
+                    const answerText = correctAnswer ? String.fromCharCode(idx + 64) + ", " + correctAnswer.getAttribute("text") : idx;
                     answers.push({
                         group: groupName,
                         type: qType,
                         decrypted: answerText,
+                        question: text, 
                         index: groupQuestionNumber
                     });
+                    console.log(answers);
                     groupQuestionNumber++;
                 }
                 // Handle <text correct="..."> elements (fillin)
                 const texts = qNode.querySelectorAll("text[correct]");
-                texts.forEach((node, idx) => {
+                const textNodes = qNode.querySelectorAll("text[text]");
+                let text = "";
+                for (let i = 0; i < textNodes.length; i++) {
+                    text += textNodes[i].getAttribute("text");
+                }
+                texts.forEach((node) => {
                     const enc = node.getAttribute("correct");
                     const dec = decrypt(enc, seed);
                     answers.push({
                         group: groupName,
                         type: qType,
                         decrypted: dec,
+                        question: text,
                         index: groupQuestionNumber
                     });
                     groupQuestionNumber++;
