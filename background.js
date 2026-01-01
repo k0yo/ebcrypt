@@ -23,6 +23,19 @@ chrome.webRequest.onCompleted.addListener(
     { urls: ["<all_urls>"], types: ["xmlhttprequest", "other"] }
 );
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.answerText) {
+        currentAnswer = message.answerText;
+        sendResponse({ status: "success" });
+        chrome.runtime.sendMessage({ type: "answerUpdated", answer: currentAnswer });
+        console.log("message sent");
+    }
+
+    if (message.type == "getAnswer") {
+        console.log("Providing answer:", currentAnswer);
+        sendResponse({ type: "answer", answer: currentAnswer });
+    }
+});
 // The webRequest onBeforeRequest handler that attempted to modify request bodies has been removed.
 // Modifying request bodies from a service worker is not supported in Manifest V3. The request modification
 // is now handled by a MAIN-world content script (see `score-modifier.js`) which overrides window.fetch and XHR before

@@ -3,6 +3,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(request.xmlText, "text/xml");
         const seed = parseInt(xmlDoc.querySelector("course").getAttribute("seed"));
+        chrome.storage.local.set({ questionOrder: [] });
 
         // Get all group elements (e.g., easy, challenging)
         const groups = Array.from(xmlDoc.querySelectorAll("group[name]"));
@@ -12,7 +13,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const groupName = group.getAttribute("name");
             // Find all questions within this group
             const questions = group.querySelectorAll("question");
-            let groupQuestionNumber = 1;
+            let groupQuestionNumber = 0;
             questions.forEach((qNode) => {
                 const qType = qNode.getAttribute("type") || "unknown";
                 // For smc/mmc: <question correct="...">, decrypt and use as index for <answer>
@@ -111,15 +112,28 @@ function onChange(mutationsList, observer) {
 
     chrome.storage.local.get(["ebcryptAnswers"]).then(result => {
         const answers = result.ebcryptAnswers || [];
-
+        let displayList = [];
+        let display = "";
         answers.forEach(item => {
             const questionText = item.question;
             const answerText = item.decrypted;
+            const questionIndex = item.index;
             if (questionText.includes(current)){
+                displayList.push(answerText);
                 console.log("Question:", questionText);
                 console.log("Answer:", answerText);
-            }
+                chrome.storage.local.get("questionOrder").then(result => {
+                    const questionOrder = result.questionOrder || [];
+                    chrome.storage.local.set({ questionOrder: [...questionOrder, questionIndex] });
+                    console.log([questionOrder, questionIndex]); // this function is not completely funtional yet
+                });
+            };
         });
+        [...new Set(displayList)].forEach(ans => {
+            display += ans + "; ";
+        });
+        console.log(display.slice(0, display.length - 2));
+        chrome.runtime.sendMessage({ answerText: display.slice(0, display.length - 2) });
     });
 }
 

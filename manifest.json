@@ -15,7 +15,8 @@
     "webRequest",
     "storage", 
     "declarativeNetRequest", 
-    "declarativeNetRequestFeedback"
+    "declarativeNetRequestFeedback",
+    "windows"
   ],
   "declarative_net_request": {
     "rule_resources": [
