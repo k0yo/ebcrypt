@@ -4,11 +4,8 @@
    contain the root `toctree` directive.
 
 =====================
-EBCrypt documentation
+EBCrypt Docs - v0.1
 =====================
-
-EBCrypt Docs – 0.1
-==================
 
 .. caution::
    This project is under development and may include bugs and incomplete features.
@@ -18,15 +15,12 @@ Welcome to the official documentation of `EBCrypt <https://github.com/k0yo/ebcry
 **EBCrypt** is a Chrome extension that helps users of `English Builder <https://www.wiseman.com.hk/>`_ by detecting and fetching course data, 
 decrypting obfuscated answers, and displaying them in the popup. 
 
+The table of contents in the sidebar should let you easily access the documentation for your topic of interest. You can also use the search function in the top-left corner. 
+You can get started by reading the :doc:`installation tutorial<installing_ebcrypt>`.
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 4
+   :hidden:
 
+   installing_ebcrypt
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
