@@ -107,6 +107,10 @@ function onChange(mutationsList, observer) {
         var current = document.querySelectorAll('.c_entry-text.ng-star-inserted')[0].innerHTML; // For non-fill-in-the-blank questions
     } else {
         var current = document.querySelectorAll('.c_entry-text.ng-star-inserted')[1].innerHTML.replace(/&nbsp;/g, ' '); // For fill-in-the-blank questions
+        if (document.querySelectorAll('.c_entry-text.ng-star-inserted')[1].innerHTML.replace(/&nbsp;/g, ' ').trim() == "•") { //Special case: fill-in-the-blank at the start of a sentence
+            console.log("Special case detected");
+            current = document.querySelectorAll('.c_entry-text.ng-star-inserted')[2].innerHTML.replace(/&nbsp;/g, ' ');
+        }
     }
     console.log("Current element:", current);
 
