@@ -134,7 +134,7 @@ function onChange(mutationsList, observer) {
                 });
             };
         });
-        [...new Set(displayList)].forEach(ans => {
+        displayList.forEach(ans => {
             display += ans + "; ";
         });
         console.log(display.slice(0, display.length - 2));
