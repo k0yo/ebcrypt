@@ -103,16 +103,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function onChange(mutationsList, observer) {
     console.log('DOM changed');
 
-    if (document.querySelectorAll("input[type='text']").length == 0) {
-        var current = document.querySelectorAll('.c_entry-text.ng-star-inserted')[0].innerHTML; // For non-fill-in-the-blank questions
-    } else {
-        var current = document.querySelectorAll('.c_entry-text.ng-star-inserted')[1].innerHTML.replace(/&nbsp;/g, ' '); // For fill-in-the-blank questions
-        if (document.querySelectorAll('.c_entry-text.ng-star-inserted')[1].innerHTML.replace(/&nbsp;/g, ' ').length <= 7) { //Special case: fill-in-the-blank at the start of a sentence
-            console.log("Special case detected");
-            current = document.querySelectorAll('.c_entry-text.ng-star-inserted')[2].innerHTML.replace(/&nbsp;/g, ' ');
-        }
+    var current = "";
+    for (let i = 0; i <= document.querySelectorAll('.c_entry-text.ng-star-inserted').length - 1; i++) {
+        console.log(document.querySelectorAll('.c_entry-text.ng-star-inserted').length);
+        current += document.querySelectorAll('.c_entry-text.ng-star-inserted')[i].innerHTML.replace(/&nbsp;/g, " ");
     }
-    current = current.replace("&nbsp;", "");
+    
     console.log("Current element:", current);
 
     chrome.storage.local.get(["ebcryptAnswers"]).then(result => {
@@ -120,10 +116,10 @@ function onChange(mutationsList, observer) {
         let displayList = [];
         let display = "";
         answers.forEach(item => {
-            const questionText = item.question;
+            const questionText = item.question.slice(2);
             const answerText = item.decrypted;
             const questionIndex = item.index;
-            if (questionText.includes(current)){
+            if (current.includes(questionText)){
                 displayList.push(answerText);
                 console.log("Question:", questionText);
                 console.log("Answer:", answerText);
@@ -134,7 +130,8 @@ function onChange(mutationsList, observer) {
                 });
             };
         });
-        if (displayList.length == 2) {
+
+        if (String(displayList.slice(displayList.length / 2)) + "," + String(displayList.slice(displayList.length / 2)) === String(displayList)) {
             displayList = [...new Set(displayList)];
         }
         displayList.forEach(ans => {
