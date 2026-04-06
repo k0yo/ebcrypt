@@ -112,6 +112,7 @@ function onChange(mutationsList, observer) {
             current = document.querySelectorAll('.c_entry-text.ng-star-inserted')[2].innerHTML.replace(/&nbsp;/g, ' ');
         }
     }
+    current = current.replace("&nbsp;", "");
     console.log("Current element:", current);
 
     chrome.storage.local.get(["ebcryptAnswers"]).then(result => {

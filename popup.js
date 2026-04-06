@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-document.getElementById('confirm').addEventListener('click', function() {
+/*document.getElementById('confirm').addEventListener('click', function() {
   var antiDetection = document.getElementById('anti-detection').value
   var automation = document.getElementById('automation').value
   chrome.storage.local.set(
@@ -38,6 +38,18 @@ document.getElementById('confirm').addEventListener('click', function() {
       console.log("Settings saved");
     }
   );
+});
+feature incomplete
+*/
+
+document.getElementById("copy").addEventListener("click", function() {
+  const copyText = document.getElementById("answers").innerText;
+  console.log("Copying text");
+  navigator.clipboard.writeText(copyText).then(() => {
+    console.log("Answers copied to clipboard");
+  }).catch(err => {
+    console.error("Could not copy text: ", err);
+  });
 });
 
 document.getElementById("popout").addEventListener("click", function() {
