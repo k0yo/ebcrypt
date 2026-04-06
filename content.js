@@ -134,6 +134,9 @@ function onChange(mutationsList, observer) {
                 });
             };
         });
+        if (displayList.length == 2) {
+            displayList = [...new Set(displayList)];
+        }
         displayList.forEach(ans => {
             display += ans + "; ";
         });
