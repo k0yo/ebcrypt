@@ -1,2 +1,2 @@
 # EBCrypt
-A browser extension that shows decrypted answers on Wiseman English Builder.
+A browser extension for assisstance on Wiseman English Builder.
