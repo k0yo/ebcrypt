@@ -39,6 +39,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     groupQuestionNumber++;
                 }
                 // Handle <text correct="..."> elements (fillin)
+                const currentQuestion = [qNode.getAttribute("text")];
                 console.log(qNode.querySelectorAll("set text").length);
                 console.log(qNode.querySelectorAll("set").length);
                 if (qNode.querySelectorAll("set text").length > qNode.querySelectorAll("set").length) { // For normal fill-in-the-blank questions
@@ -48,6 +49,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     for (let i = 0; i < textNodes.length; i++) {
                         text += textNodes[i].getAttribute("text");
                     }
+                    text = currentQuestion + text;
                     texts.forEach((node) => {
                         const enc = node.getAttribute("correct");
                         const dec = decrypt(enc, seed);
