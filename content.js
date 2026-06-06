@@ -35,11 +35,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         question: text,
                         index: groupQuestionNumber
                     });
+                    console.log(answers);
                     groupQuestionNumber++;
                 }
                 // Handle <text correct="..."> elements (fillin)
                 const currentQuestion = [qNode.getAttribute("text")];
+                console.log(qNode.querySelectorAll("set text").length);
+                console.log(qNode.querySelectorAll("set").length);
                 if (qNode.querySelectorAll("set text").length > qNode.querySelectorAll("set").length) { // For normal fill-in-the-blank questions
+
                     const texts = qNode.querySelectorAll("text[correct]");
                     const textNodes = qNode.querySelectorAll("text[text]");
                     let text = "";
@@ -88,7 +92,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     });
                     groupQuestionNumber++;
                 });
+                console.log(answers);
             });
+
         });
 
         // Save answers to chrome.storage.local for popup
@@ -110,13 +116,20 @@ function debounce(fn, delay) {
 }
 
 function onChange() {
+    console.log('DOM changed');
+
     const entryElements = document.querySelectorAll('.c_entry-text.ng-star-inserted');
     if (entryElements.length === 0) return;
+
+    console.log(entryElements.length);
 
     let current = "";
     for (let i = 0; i < entryElements.length; i++) {
         current += entryElements[i].innerHTML.replace(/&nbsp;/g, " ");
     }
+
+    console.log("Current element:", current);
+
 
     chrome.storage.local.get(["ebcryptAnswers"]).then(result => {
         const answers = result.ebcryptAnswers || [];
@@ -127,6 +140,8 @@ function onChange() {
             const answerText = item.decrypted;
             if (current.includes(questionText)) {
                 displayList.push(answerText);
+                console.log("Question:", questionText);
+                console.log("Answer:", answerText);
             }
         });
 
@@ -134,9 +149,11 @@ function onChange() {
         displayList = [...new Set(displayList)];
 
         const display = displayList.join("; ");
+        console.log(display);
         if (display) {
             chrome.runtime.sendMessage({ answerText: display });
         }
+
     });
 }
 
