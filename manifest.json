@@ -13,20 +13,10 @@
     "scripting",
     "activeTab",
     "webRequest",
-    "storage", 
-    "declarativeNetRequest", 
-    "declarativeNetRequestFeedback",
+    "storage",
     "windows"
   ],
-  "declarative_net_request": {
-    "rule_resources": [
-      {
-        "id": "ruleset_1",
-        "enabled": true,
-        "path": "rules.json"
-      }
-    ]
-  },
+
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
@@ -34,7 +24,7 @@
   "content_scripts": [
     {
       "matches": ["*://*.wiseman.com.hk/*"],
-      "js": ["score-modifier.js", "main.js"],
+      "js": ["score-modifier.js"],
       "run_at": "document_start",
       "world": "MAIN"
     },
@@ -52,7 +42,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["score-modifier.js", "main.js"],
+      "resources": ["score-modifier.js"],
       "matches": ["*://*.wiseman.com.hk/*"]
     }
   ],

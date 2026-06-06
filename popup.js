@@ -22,8 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
       chrome.runtime.sendMessage({ type: "getAnswer" }, (response) => {
         if (response && response.type === "answer") {
           answersDiv.innerHTML = `<p>${response.answer}</p>`;
-          console.log("Answer:", response.answer);
-          window.location.href = window.location.href;
         }
       });
     }
@@ -43,6 +41,7 @@ feature incomplete
 */
 
 document.getElementById("copy").addEventListener("click", function() {
+
   const copyText = document.getElementById("answers").innerText;
   console.log("Copying text");
   navigator.clipboard.writeText(copyText).then(() => {

@@ -32,16 +32,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         group: groupName,
                         type: qType,
                         decrypted: answerText,
-                        question: text, 
+                        question: text,
                         index: groupQuestionNumber
                     });
-                    console.log(answers);
                     groupQuestionNumber++;
                 }
                 // Handle <text correct="..."> elements (fillin)
                 const currentQuestion = [qNode.getAttribute("text")];
-                console.log(qNode.querySelectorAll("set text").length);
-                console.log(qNode.querySelectorAll("set").length);
                 if (qNode.querySelectorAll("set text").length > qNode.querySelectorAll("set").length) { // For normal fill-in-the-blank questions
                     const texts = qNode.querySelectorAll("text[correct]");
                     const textNodes = qNode.querySelectorAll("text[text]");
@@ -65,7 +62,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 } else { // For matching fill-in-the-blank questions
                     const text = qNode.getAttribute("text");
                     const texts = qNode.querySelectorAll("text[correct]");
-                    const textNodes = qNode.querySelectorAll("text[text]");
                     texts.forEach((node) => {
                         const enc = node.getAttribute("correct");
                         const dec = decrypt(enc, seed);
@@ -81,7 +77,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
                 // Handle <answer correct="..."> elements (mmc, etc), may have been discontinued in EB
                 const options = qNode.querySelectorAll("answer[correct]");
-                options.forEach((node, idx) => {
+                options.forEach((node) => {
                     const enc = node.getAttribute("correct");
                     const dec = decrypt(enc, seed);
                     answers.push({
@@ -92,7 +88,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     });
                     groupQuestionNumber++;
                 });
-                console.log(answers);
             });
         });
 
@@ -102,56 +97,60 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-function onChange(mutationsList, observer) {
-    console.log('DOM changed');
+// Debounce helper: delays execution until `delay` ms after the last call
+function debounce(fn, delay) {
+    let timer = null;
+    return function(...args) {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+            fn.apply(this, args);
+            timer = null;
+        }, delay);
+    };
+}
 
-    var current = "";
-    for (let i = 0; i <= document.querySelectorAll('.c_entry-text.ng-star-inserted').length - 1; i++) {
-        console.log(document.querySelectorAll('.c_entry-text.ng-star-inserted').length);
-        current += document.querySelectorAll('.c_entry-text.ng-star-inserted')[i].innerHTML.replace(/&nbsp;/g, " ");
+function onChange() {
+    const entryElements = document.querySelectorAll('.c_entry-text.ng-star-inserted');
+    if (entryElements.length === 0) return;
+
+    let current = "";
+    for (let i = 0; i < entryElements.length; i++) {
+        current += entryElements[i].innerHTML.replace(/&nbsp;/g, " ");
     }
-    
-    console.log("Current element:", current);
 
     chrome.storage.local.get(["ebcryptAnswers"]).then(result => {
         const answers = result.ebcryptAnswers || [];
         let displayList = [];
-        let display = "";
+
         answers.forEach(item => {
             const questionText = item.question.slice(2);
             const answerText = item.decrypted;
-            const questionIndex = item.index;
-            if (current.includes(questionText)){
+            if (current.includes(questionText)) {
                 displayList.push(answerText);
-                console.log("Question:", questionText);
-                console.log("Answer:", answerText);
-                chrome.storage.local.get("questionOrder").then(result => {
-                    const questionOrder = result.questionOrder || [];
-                    chrome.storage.local.set({ questionOrder: [...questionOrder, questionIndex] });
-                    console.log([questionOrder, questionIndex]); // this function is not completely funtional yet
-                });
-            };
+            }
         });
 
-        if (String(displayList.slice(displayList.length / 2)) + "," + String(displayList.slice(displayList.length / 2)) === String(displayList)) {
-            displayList = [...new Set(displayList)];
+        // Always deduplicate
+        displayList = [...new Set(displayList)];
+
+        const display = displayList.join("; ");
+        if (display) {
+            chrome.runtime.sendMessage({ answerText: display });
         }
-        displayList.forEach(ans => {
-            display += ans + "; ";
-        });
-        console.log(display.slice(0, display.length - 2));
-        chrome.runtime.sendMessage({ answerText: display.slice(0, display.length - 2) });
     });
 }
 
-const observer = new MutationObserver(onChange);
+// Debounced observer: only process DOM changes after 300ms of inactivity
+const debouncedOnChange = debounce(onChange, 300);
+
+const observer = new MutationObserver(debouncedOnChange);
 
 observer.observe(document.body, {
     childList: true,
     subtree: true
 });
 
-// Interception of 'commit.do' requests is handled by `main.js` (in the MAIN world) which overrides
+// Interception of 'commit.do' requests is handled by `score-modifier.js` (in the MAIN world) which overrides
 // `window.fetch` and `XMLHttpRequest` at document_start. That code is intentionally separated because
 // MAIN-world scripts can access the page's real fetch/XHR, while the ISOLATED world (this script) needs
 // `chrome.runtime` access to display answers and cannot run in MAIN.

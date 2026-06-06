@@ -1,0 +1,13 @@
+# Generated build artifacts
+docs/build/
+
+# Chrome extension packaging metadata
+_metadata/
+
+# IDE/editor files
+.vscode/
+.clinerules/
+
+# OS files
+.DS_Store
+Thumbs.db

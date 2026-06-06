@@ -1,4 +1,7 @@
+let currentAnswer = null;
+
 chrome.webRequest.onCompleted.addListener(
+
     async (details) => {
         if (!details.url.includes('course_pc.exml')) return;
 
@@ -20,7 +23,8 @@ chrome.webRequest.onCompleted.addListener(
             console.error("Error fetching or sending XML:", e);
         }
     },
-    { urls: ["<all_urls>"], types: ["xmlhttprequest", "other"] }
+    { urls: ["*://*/*course_pc.exml*"], types: ["xmlhttprequest", "other"] }
+
 );
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
