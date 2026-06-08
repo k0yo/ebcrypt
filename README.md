@@ -2,6 +2,8 @@
 
 A Chrome extension that assists with **Wiseman English Builder** by decrypting obfuscated answers and displaying them in the extension popup.
 
+![EBCrypt logo](icon128.png)
+
 ## Features
 
 - **Answer Decryption** — Intercepts course data XML, decrypts obfuscated answers, and displays them in the popup
